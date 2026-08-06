@@ -44,7 +44,7 @@ class EmbeddingService:
             f"Generating embeddings for {len(chunks)} chunks..."
         )
 
-        BATCH_SIZE = 50
+        BATCH_SIZE = 20
 
         embeddings = []
 
