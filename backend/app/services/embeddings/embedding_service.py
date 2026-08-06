@@ -7,31 +7,38 @@ logger = logging.getLogger(__name__)
 
 class EmbeddingService:
     """
-    Generates embeddings using Sentence Transformers.
+    Singleton embedding service.
     """
 
     MODEL_NAME = "all-MiniLM-L6-v2"
 
-    def __init__(self):
+    _instance = None
+    _model = None
 
-        logger.info(
-            f"Loading embedding model '{self.MODEL_NAME}'..."
-        )
+    def __new__(cls):
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+        return cls._instance
 
-        self.model = SentenceTransformer(
-            self.MODEL_NAME
-        )
+    def _load_model(self):
+        if self._model is None:
+            logger.info(
+                f"Loading embedding model '{self.MODEL_NAME}'..."
+            )
 
-        logger.info(
-            "Embedding model loaded successfully."
-        )
+            self._model = SentenceTransformer(
+                self.MODEL_NAME
+            )
 
-    def embed(
-        self,
-        text: str,
-    ):
+            logger.info(
+                "Embedding model loaded successfully."
+            )
 
-        embedding = self.model.encode(
+    def embed(self, text: str):
+
+        self._load_model()
+
+        embedding = self._model.encode(
             text,
             convert_to_numpy=True,
             normalize_embeddings=True,
@@ -39,20 +46,19 @@ class EmbeddingService:
 
         return embedding.tolist()
 
-    def embed_chunks(
-        self,
-        chunks,
-    ):
+    def embed_chunks(self, chunks):
+
+        self._load_model()
 
         logger.info(
             f"Generating embeddings for {len(chunks)} chunks..."
         )
 
-        embeddings = self.model.encode(
+        embeddings = self._model.encode(
             chunks,
             convert_to_numpy=True,
             normalize_embeddings=True,
-            batch_size=32,
+            batch_size=8,
             show_progress_bar=True,
         )
 
