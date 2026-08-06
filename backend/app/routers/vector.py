@@ -14,7 +14,7 @@ sec = SECService()
 embedding = EmbeddingService()
 qdrant = QdrantService()
 
-EMBEDDING_DIMENSION = 3072
+EMBEDDING_DIMENSION = 384
 
 
 @router.get("/vector/test", tags=["Vector DB"])
