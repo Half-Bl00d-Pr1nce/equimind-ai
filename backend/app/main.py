@@ -4,10 +4,8 @@ from fastapi import FastAPI
 from app.config.logging import configure_logging
 import logging
 from app.routers.api import api_router
-
-
-
-
+from app.core.logging import setup_logging
+from fastapi.middleware.cors import CORSMiddleware
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -28,6 +26,7 @@ async def lifespan(app: FastAPI):
 
 
 configure_logging()
+setup_logging()
 
 app = FastAPI(
     title=settings.APP_NAME,
@@ -37,6 +36,14 @@ app = FastAPI(
     redoc_url="/redoc",
     openapi_url="/openapi.json",
     lifespan=lifespan,
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 app.include_router(
