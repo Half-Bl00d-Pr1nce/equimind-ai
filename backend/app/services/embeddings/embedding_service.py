@@ -1,69 +1,60 @@
 import logging
 
-from sentence_transformers import SentenceTransformer
+from google import genai
+from app.config.settings import settings
 
 logger = logging.getLogger(__name__)
 
 
 class EmbeddingService:
     """
-    Singleton embedding service.
+    Generates embeddings using Gemini.
     """
 
-    MODEL_NAME = "all-MiniLM-L6-v2"
+    MODEL_NAME = "gemini-embedding-001"
 
-    _instance = None
-    _model = None
+    def __init__(self):
 
-    def __new__(cls):
-        if cls._instance is None:
-            cls._instance = super().__new__(cls)
-        return cls._instance
-
-    def _load_model(self):
-        if self._model is None:
-            logger.info(
-                f"Loading embedding model '{self.MODEL_NAME}'..."
-            )
-
-            self._model = SentenceTransformer(
-                self.MODEL_NAME
-            )
-
-            logger.info(
-                "Embedding model loaded successfully."
-            )
-
-    def embed(self, text: str):
-
-        self._load_model()
-
-        embedding = self._model.encode(
-            text,
-            convert_to_numpy=True,
-            normalize_embeddings=True,
+        self.client = genai.Client(
+            api_key=settings.GOOGLE_API_KEY
         )
 
-        return embedding.tolist()
+    def embed(
+        self,
+        text: str,
+    ):
 
-    def embed_chunks(self, chunks):
+        response = self.client.models.embed_content(
+            model=self.MODEL_NAME,
+            contents=text,
+        )
 
-        self._load_model()
+        return response.embeddings[0].values
+
+    def embed_chunks(
+        self,
+        chunks,
+    ):
 
         logger.info(
             f"Generating embeddings for {len(chunks)} chunks..."
         )
 
-        embeddings = self._model.encode(
-            chunks,
-            convert_to_numpy=True,
-            normalize_embeddings=True,
-            batch_size=8,
-            show_progress_bar=True,
-        )
+        embeddings = []
+
+        for chunk in chunks:
+
+            response = self.client.models.embed_content(
+                model=self.MODEL_NAME,
+                contents=chunk,
+            )
+
+            embeddings.append(
+                response.embeddings[0].values
+            )
 
         logger.info(
             "Finished generating embeddings."
         )
 
-        return embeddings.tolist()
+        return embeddings
