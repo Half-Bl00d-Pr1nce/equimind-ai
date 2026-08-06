@@ -41,7 +41,14 @@ def create_collection():
 def index_company(ticker: str):
 
     company = sec.get_cik(ticker)
-    
+
+    # Ensure collection exists first
+    vector = embedding.embed("Hello EquiMind!")
+
+    qdrant.create_collection(
+        len(vector)
+    )
+
     existing_vectors = qdrant.company_vector_count(ticker)
 
     if existing_vectors > 0:
