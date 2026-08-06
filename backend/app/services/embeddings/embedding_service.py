@@ -1,5 +1,5 @@
 import logging
-
+import time
 from google import genai
 from app.config.settings import settings
 
@@ -44,7 +44,7 @@ class EmbeddingService:
             f"Generating embeddings for {len(chunks)} chunks..."
         )
 
-        BATCH_SIZE = 20
+        BATCH_SIZE = 10
 
         embeddings = []
 
@@ -63,6 +63,8 @@ class EmbeddingService:
                     for embedding in response.embeddings
                 ]
             )
+
+            time.sleep(3)
 
             logger.info(
                 f"Embedded {min(i + BATCH_SIZE, len(chunks))}/{len(chunks)} chunks"
