@@ -22,9 +22,15 @@ class EmbeddingService:
             model_name=self.MODEL_NAME
         )
 
-        logger.info(
-            "Embedding model loaded successfully."
+        logger.info("TextEmbedding object created.")
+
+        logger.info("Generating first test embedding...")
+
+        next(
+            self.model.embed(["hello"])
         )
+
+        logger.info("Embedding model loaded successfully.")
 
     def embed(
         self,
