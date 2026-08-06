@@ -1,17 +1,20 @@
-from fastapi import HTTPException
 from fastapi import APIRouter
-from app.services.embeddings.embedding_service import EmbeddingService
-from app.services.vector_db.qdrant_service import QdrantService
-from app.services.pipeline.document_pipeline import DocumentPipeline
-from app.services.sec.sec_service import SECService
+from fastapi import HTTPException
 from fastapi import Query
 
-pipeline = DocumentPipeline()
-sec = SECService()
+from app.services.embeddings.embedding_service import EmbeddingService
+from app.services.pipeline.document_pipeline import DocumentPipeline
+from app.services.sec.sec_service import SECService
+from app.services.vector_db.qdrant_service import QdrantService
 
 router = APIRouter()
 
+pipeline = DocumentPipeline()
+sec = SECService()
+embedding = EmbeddingService()
 qdrant = QdrantService()
+
+EMBEDDING_DIMENSION = 3072
 
 
 @router.get("/vector/test", tags=["Vector DB"])
@@ -21,53 +24,51 @@ def test_connection():
 
     return collections
 
-embedding = EmbeddingService()
-
 
 @router.post("/vector/create", tags=["Vector DB"])
 def create_collection():
 
-    vector = embedding.embed("Hello EquiMind!")
-
     qdrant.create_collection(
-        len(vector)
+        EMBEDDING_DIMENSION
     )
 
     return {
         "status": "Collection created successfully."
     }
 
+
 @router.post("/vector/index/{ticker}", tags=["Vector DB"])
 def index_company(ticker: str):
 
     company = sec.get_cik(ticker)
 
-    # Ensure collection exists first
-    vector = embedding.embed("Hello EquiMind!")
+    if company is None:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Ticker '{ticker.upper()}' not found."
+        )
 
     qdrant.create_collection(
-        len(vector)
+        EMBEDDING_DIMENSION
     )
 
-    existing_vectors = qdrant.company_vector_count(ticker)
+    existing_vectors = qdrant.company_vector_count(
+        ticker
+    )
 
     if existing_vectors > 0:
+
         return {
             "status": "Company already indexed.",
             "indexed": True,
             "ticker": ticker.upper(),
             "vector_count": existing_vectors,
         }
-        
-    if company is None:
-        raise HTTPException(
-            status_code=404,
-            detail=f"Ticker '{ticker.upper()}' not found."
-        )
+
     download = sec.download_latest_10k(
         company["cik"]
     )
-    
+
     if download is None:
         raise HTTPException(
             status_code=404,
@@ -81,9 +82,9 @@ def index_company(ticker: str):
     if not chunks:
         raise HTTPException(
             status_code=404,
-            detail=f"No chunks generated from the 10-K filing for ticker '{ticker.upper()}'."
+            detail="No chunks generated."
         )
-        
+
     embeddings = embedding.embed_chunks(
         chunks
     )
@@ -100,7 +101,8 @@ def index_company(ticker: str):
         "ticker": ticker.upper(),
         "chunks": len(chunks),
     }
-    
+
+
 @router.get("/vector/count", tags=["Vector DB"])
 def count_vectors():
 
@@ -111,7 +113,8 @@ def count_vectors():
     return {
         "vectors": info.points_count
     }
-    
+
+
 @router.get(
     "/vector/search",
     tags=["Vector DB"],
@@ -131,4 +134,3 @@ def search(
     return {
         "results": results
     }
-

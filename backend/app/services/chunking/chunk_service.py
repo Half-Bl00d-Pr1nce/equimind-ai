@@ -1,29 +1,42 @@
+import logging
+
+logger = logging.getLogger(__name__)
+
 class ChunkService:
     """
     Responsible for splitting cleaned
     documents into chunks.
     """
 
-    def chunk(
+    def embed_chunks(
         self,
-        text: str,
-        chunk_size: int = 1000,
-        overlap: int = 200,
+        chunks,
     ):
-        """
-        Split text into overlapping chunks.
-        """
+        logger.info(
+            f"Generating embeddings for {len(chunks)} chunks..."
+        )
 
-        chunks = []
+        BATCH_SIZE = 20
+        embeddings = []
 
-        start = 0
+        for i in range(0, len(chunks), BATCH_SIZE):
 
-        while start < len(text):
+            batch = chunks[i:i + BATCH_SIZE]
 
-            end = start + chunk_size
+            response = self.client.models.embed_content(
+                model=self.MODEL_NAME,
+                contents=batch,
+            )
 
-            chunks.append(text[start:end])
+            embeddings.extend(
+                [
+                    embedding.values
+                    for embedding in response.embeddings
+                ]
+            )
 
-            start += chunk_size - overlap
+        logger.info(
+            "Finished generating embeddings."
+        )
 
-        return chunks
+        return embeddings

@@ -35,22 +35,37 @@ class EmbeddingService:
         self,
         chunks,
     ):
+        """
+        Generate embeddings in batches to avoid
+        Gemini rate limits.
+        """
 
         logger.info(
             f"Generating embeddings for {len(chunks)} chunks..."
         )
 
+        BATCH_SIZE = 50
+
         embeddings = []
 
-        for chunk in chunks:
+        for i in range(0, len(chunks), BATCH_SIZE):
+
+            batch = chunks[i:i + BATCH_SIZE]
 
             response = self.client.models.embed_content(
                 model=self.MODEL_NAME,
-                contents=chunk,
+                contents=batch,
             )
 
-            embeddings.append(
-                response.embeddings[0].values
+            embeddings.extend(
+                [
+                    embedding.values
+                    for embedding in response.embeddings
+                ]
+            )
+
+            logger.info(
+                f"Embedded {min(i + BATCH_SIZE, len(chunks))}/{len(chunks)} chunks"
             )
 
         logger.info(
