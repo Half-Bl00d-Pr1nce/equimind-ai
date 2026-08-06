@@ -11,7 +11,6 @@ router = APIRouter()
 
 pipeline = DocumentPipeline()
 sec = SECService()
-embedding = EmbeddingService()
 qdrant = QdrantService()
 
 EMBEDDING_DIMENSION = 384
@@ -85,6 +84,9 @@ def index_company(ticker: str):
             detail="No chunks generated."
         )
 
+    # Lazy-load embedding model
+    embedding = EmbeddingService()
+
     embeddings = embedding.embed_chunks(
         chunks
     )
@@ -124,7 +126,12 @@ def search(
     query: str = Query(...),
 ):
 
-    query_embedding = embedding.embed(query)
+    # Lazy-load embedding model
+    embedding = EmbeddingService()
+
+    query_embedding = embedding.embed(
+        query
+    )
 
     results = qdrant.search(
         ticker,
