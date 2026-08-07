@@ -236,7 +236,6 @@ http://localhost:5173
 **Sanjay Siddarth S**
 
 - GitHub: https://github.com/Half-Bl00d-Pr1nce
-- LinkedIn: *(Add your LinkedIn profile here)*
 
 ---
 
