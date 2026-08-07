@@ -7,8 +7,8 @@ class ChunkService:
     def chunk(
         self,
         text: str,
-        chunk_size: int = 1000,
-        overlap: int = 200,
+        chunk_size: int = 1500,
+        overlap: int = 300,
     ):
         """
         Split text into overlapping chunks.

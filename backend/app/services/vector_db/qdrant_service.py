@@ -135,7 +135,7 @@ class QdrantService:
         self,
         ticker: str,
         query_vector,
-        limit: int = 5,
+        limit: int = 10,
     ):
         """
         Search the vector database.

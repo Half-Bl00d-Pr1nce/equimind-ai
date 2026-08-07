@@ -37,7 +37,7 @@ class ChatPipeline:
             ticker,
             query_embedding,
         )
-
+        
         logger.info(f"Retrieved {len(chunks)} chunks")
 
         context = "\n\n".join(chunks)
